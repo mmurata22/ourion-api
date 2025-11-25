@@ -4,3 +4,4 @@ numpy
 gunicorn
 opencv-python-headless
 pyzbar
+requests
