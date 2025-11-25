@@ -46,4 +46,8 @@ def process_image():
 
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True)
+    import os
+    # Render gives a specific PORT environment variable
+    port = int(os.environ.get("PORT", 10000))
+    # host='0.0.0.0' is crucial! It tells the app to accept connections from outside the container
+    app.run(host="0.0.0.0", port=port)
