@@ -44,6 +44,10 @@ def process_image():
 
     return jsonify(product_info)
 
+    @app.route('/')
+    def home():
+        return "RecycleVision API is Running!"
+
 
 if __name__ == "__main__":
     import os
