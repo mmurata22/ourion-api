@@ -46,7 +46,7 @@ def process_image():
 
 @app.route('/')
 def home():
-    return "RecycleVision API is Running!"
+    return "Ourion API is Running!"
 
 
 if __name__ == "__main__":

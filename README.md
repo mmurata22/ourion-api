@@ -1,7 +1,7 @@
-# RecycleVision Backend API
+# Ourion Backend API
 
 ## Project Overview
-The OpenCV RecycleVision project aims to leverage computer vision and machine learning techniques to enhance recycling efficiency and accuracy. This repository contains the **Python/Flask backend** that processes images using OpenCV.
+The OpenCV Ourion project aims to leverage computer vision and machine learning techniques to enhance recycling efficiency and accuracy. This repository contains the **Python/Flask backend** that processes images using OpenCV.
 
 ## Running Locally
 
@@ -79,5 +79,5 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 3. Clone the Repository
 
 ```
-git clone [https://github.com/YOUR_USERNAME/recyclevision-api.git](https://github.com/mmurata22/recyclevision-api.git)
+git clone [https://github.com/YOUR_USERNAME/ourion-api.git](https://github.com/mmurata22/ourion-api.git)
 ```
