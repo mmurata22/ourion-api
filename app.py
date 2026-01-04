@@ -1,13 +1,20 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import cv2
 from pyzbar.pyzbar import decode
 import numpy as np
-import tempfile
 import requests
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+
+# Configure CORS based on environment
+allowed_origins = os.getenv('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+CORS(app, origins=allowed_origins)
 
 def extract_material_category(packaging_str, recycling_str, product_name):
     """
@@ -34,7 +41,7 @@ def extract_material_category(packaging_str, recycling_str, product_name):
         return "metal"
     # Fallback: common product types
     elif "soda" in combined or "cola" in combined or "pop" in combined:
-        return "aluminum"  # Most sodas are in aluminum cans
+        return "aluminum"
     else:
         return "unknown"
 
@@ -56,7 +63,10 @@ def process_image():
     
     # Use first barcode only for now
     code = barcodes[0].data.decode("utf-8")
-    print("BARCODE:", code)
+    
+    # Only log in development
+    if os.getenv('FLASK_ENV') == 'development':
+        print("BARCODE:", code)
     
     # Query OpenFoodFacts
     url = f"https://world.openfoodfacts.org/api/v0/product/{code}.json"
@@ -73,20 +83,36 @@ def process_image():
     product_info = {
         "barcode": code,
         "name": product.get("product_name"),
-        "category": category,  # ← NEW!
+        "category": category,
         "packaging": packaging,
         "recycling": recycling,
     }
     
-    print("📦 SENDING TO FRONTEND:", product_info)
+    # Only log in development
+    if os.getenv('FLASK_ENV') == 'development':
+        print("📦 SENDING TO FRONTEND:", product_info)
     
     return jsonify(product_info)
 
 @app.route('/')
 def home():
-    return "Ourion API is Running!"
+    env = os.getenv('FLASK_ENV', 'production')
+    return f"Ourion API is Running! (Environment: {env})"
+
+@app.route('/health')
+def health():
+    """Health check endpoint for monitoring"""
+    return jsonify({"status": "healthy", "environment": os.getenv('FLASK_ENV', 'production')})
 
 if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.getenv("PORT", 10000))
+    debug = os.getenv("FLASK_DEBUG", "False") == "True"
+    app.run(host="0.0.0.0", port=port, debug=debug)
+
+@app.route('/health')
+def health():
+    """Health check endpoint for monitoring"""
+    return jsonify({
+        "status": "healthy", 
+        "environment": os.getenv('FLASK_ENV', 'production')
+    })
