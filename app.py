@@ -5,15 +5,13 @@ from pyzbar.pyzbar import decode
 import numpy as np
 import requests
 import os
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 app = Flask(__name__)
 
 # Configure CORS based on environment
-allowed_origins = os.getenv('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+allowed_origins = os.getenv('ALLOWED_ORIGINS', '*')
+if allowed_origins != '*':
+    allowed_origins = allowed_origins.split(',')
 CORS(app, origins=allowed_origins)
 
 def extract_material_category(packaging_str, recycling_str, product_name):
@@ -102,17 +100,11 @@ def home():
 @app.route('/health')
 def health():
     """Health check endpoint for monitoring"""
-    return jsonify({"status": "healthy", "environment": os.getenv('FLASK_ENV', 'production')})
-
-if __name__ == "__main__":
-    port = int(os.getenv("PORT", 10000))
-    debug = os.getenv("FLASK_DEBUG", "False") == "True"
-    app.run(host="0.0.0.0", port=port, debug=debug)
-
-@app.route('/health')
-def health():
-    """Health check endpoint for monitoring"""
     return jsonify({
         "status": "healthy", 
         "environment": os.getenv('FLASK_ENV', 'production')
     })
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
