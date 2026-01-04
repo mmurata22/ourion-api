@@ -9,29 +9,32 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-def extract_material_category(packaging_str, recycling_str):
+def extract_material_category(packaging_str, recycling_str, product_name):
     """
     Extracts the primary material type from packaging strings
-    Returns: aluminum, plastic, glass, cardboard, etc.
+    Falls back to product name if packaging data is missing
     """
-    if not packaging_str and not recycling_str:
+    if not packaging_str and not recycling_str and not product_name:
         return "unknown"
     
-    combined = f"{packaging_str or ''} {recycling_str or ''}".lower()
+    combined = f"{packaging_str or ''} {recycling_str or ''} {product_name or ''}".lower()
     
     # Check for materials in order of specificity
-    if "aluminium" in combined or "aluminum" in combined or "metal can" in combined:
+    if "aluminium" in combined or "aluminum" in combined or "metal can" in combined or "can" in combined:
         return "aluminum"
-    elif "plastic" in combined or "pet" in combined or "hdpe" in combined or "pp" in combined:
+    elif "plastic" in combined or "pet" in combined or "hdpe" in combined or "pp" in combined or "bottle" in combined:
         return "plastic"
-    elif "glass" in combined or "bottle" in combined and "glass" in combined:
+    elif "glass" in combined:
         return "glass"
-    elif "cardboard" in combined or "carton" in combined or "paper" in combined:
+    elif "cardboard" in combined or "carton" in combined or "paper" in combined or "box" in combined:
         return "cardboard"
     elif "battery" in combined or "batteries" in combined:
         return "batteries"
     elif "steel" in combined or "tin" in combined:
         return "metal"
+    # Fallback: common product types
+    elif "soda" in combined or "cola" in combined or "pop" in combined:
+        return "aluminum"  # Most sodas are in aluminum cans
     else:
         return "unknown"
 
@@ -64,7 +67,7 @@ def process_image():
     recycling = product.get("packaging_recycling")
     
     # Extract material category
-    category = extract_material_category(packaging, recycling)
+    category = extract_material_category(packaging, recycling, product.get("product_name"))
     
     # Get product + packaging info
     product_info = {
