@@ -32,7 +32,7 @@ pip install flask opencv-python-headless flask-cors gunicorn
 
 ### 3. Start the Server
 ```
-python flask_app.py
+python app.py
 ```
 
 ## Development Environment & Set Up (WSL + Docker)
@@ -80,4 +80,5 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 ```
 git clone [https://github.com/YOUR_USERNAME/ourion-api.git](https://github.com/mmurata22/ourion-api.git)
+
 ```
