@@ -8,11 +8,18 @@ import os
 
 app = Flask(__name__)
 
-# Configure CORS based on environment
-allowed_origins = os.getenv('ALLOWED_ORIGINS', '*')
-if allowed_origins != '*':
-    allowed_origins = allowed_origins.split(',')
-CORS(app, origins=allowed_origins)
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://www.ourion.app",
+            "https://ourion.app",
+            "http://localhost:3000",
+            "http://localhost:5173"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 def extract_material_category(packaging_str, recycling_str, product_name):
     """
@@ -45,6 +52,9 @@ def extract_material_category(packaging_str, recycling_str, product_name):
 
 @app.route("/process-image", methods=["POST"])
 def process_image():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+    
     if "image" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
     
