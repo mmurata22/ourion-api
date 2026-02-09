@@ -59,48 +59,50 @@ def process_image():
         return jsonify({"error": "No file uploaded"}), 400
     
     file = request.files["image"]
+    # NEW: Grab the hint from your React scanner
+    local_hint = request.form.get("local_cv_guess", "unknown")
     
     # Read image into OpenCV
     file_bytes = np.frombuffer(file.read(), np.uint8)
     img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
     
-    # Decode barcodes
+    # 1. ATTEMPT BARCODE DECODE (High Precision)
     barcodes = decode(img)
-    if not barcodes:
-        return jsonify({"error": "No barcode detected"}), 404
     
-    # Use first barcode only for now
-    code = barcodes[0].data.decode("utf-8")
+    if barcodes:
+        code = barcodes[0].data.decode("utf-8")
+        url = f"https://world.openfoodfacts.org/api/v0/product/{code}.json"
+        response = requests.get(url).json()
+        
+        product = response.get("product", {})
+        packaging = product.get("packaging")
+        recycling = product.get("packaging_recycling")
+        
+        category = extract_material_category(packaging, recycling, product.get("product_name"))
+        
+        return jsonify({
+            "source": "barcode",
+            "barcode": code,
+            "name": product.get("product_name") or "Known Product",
+            "category": category,
+            "packaging": packaging,
+            "recycling": recycling,
+        })
+
+    # 2. FALLBACK TO LOCAL AI HINT (High Flexibility)
+    if local_hint != "unknown":
+        # Map the YOLO label to your recycling categories
+        category = extract_material_category("", "", local_hint)
+        
+        return jsonify({
+            "source": "visual_ai",
+            "name": f"Detected {local_hint}",
+            "category": category,
+            "note": "Classified based on visual shape (no barcode found)."
+        })
     
-    # Only log in development
-    if os.getenv('FLASK_ENV') == 'development':
-        print("BARCODE:", code)
-    
-    # Query OpenFoodFacts
-    url = f"https://world.openfoodfacts.org/api/v0/product/{code}.json"
-    response = requests.get(url).json()
-    
-    product = response.get("product", {})
-    packaging = product.get("packaging")
-    recycling = product.get("packaging_recycling")
-    
-    # Extract material category
-    category = extract_material_category(packaging, recycling, product.get("product_name"))
-    
-    # Get product + packaging info
-    product_info = {
-        "barcode": code,
-        "name": product.get("product_name"),
-        "category": category,
-        "packaging": packaging,
-        "recycling": recycling,
-    }
-    
-    # Only log in development
-    if os.getenv('FLASK_ENV') == 'development':
-        print("📦 SENDING TO FRONTEND:", product_info)
-    
-    return jsonify(product_info)
+    # 3. ABSOLUTE FAILURE
+    return jsonify({"error": "No barcode detected and visual scan uncertain"}), 404
 
 @app.route('/')
 def home():
